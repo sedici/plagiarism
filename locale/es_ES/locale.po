@@ -19,3 +19,27 @@ msgstr "Permite enviar artículos a iThenticate para verificar posibles plagios.
 
 msgid "plugins.generic.plagiarism.description.seeReadme"
 msgstr "Permite enviar artículos a iThenticate para verificar posibles plagios. <strong>Vea el archivo README para instrucciones de instalación.</strong>"
+
+msgid "plugins.generic.plagiarism.manager.setting.description"
+msgstr "Opciones del módulo de Plagiarism"
+
+msgid "plugins.generic.plagiarism.manager.setting.automatic"
+msgstr "Marque la casilla para activar el envío automático"
+
+msgid "plugins.generic.plagiarism.manager.setting.stages"
+msgstr "Etapas"
+
+msgid "plugins.generic.plagiarism.manager.setting.stages.description"
+msgstr "Seleccione en que etapa quiere realizar el envio a iThenticate"
+
+msgid "plugins.generic.plagiarism.manager.setting.stages.submission"
+msgstr "Envío"
+
+msgid "plugins.generic.plagiarism.manager.setting.stages.review"
+msgstr "Revisión"
+
+msgid "plugins.generic.plagiarism.manager.setting.stages.copyediting"
+msgstr "Corrección"
+
+msgid "plugins.generic.plagiarism.manager.setting.stages.production"
+msgstr "Producción"

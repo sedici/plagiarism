@@ -14,3 +14,5 @@ username = "user@email.com"
 
 ; The password to access the API
 password = "password"
+
+;This version "2.0" its made by Sedici - UNLP

@@ -25,9 +25,8 @@ class PlagiarismPlugin extends GenericPlugin {
 		}
 		return $success;
 	}
-
-	/**
-	 * @copydoc Plugin::getDisplayName()
+ 
+	 /* @copydoc Plugin::getDisplayName()
 	 */
 	public function getDisplayName() {
 		return __('plugins.generic.plagiarism.displayName');
@@ -47,7 +46,7 @@ class PlagiarismPlugin extends GenericPlugin {
 		if (!parent::getCanEnable()) return false;
 		return Config::getVar('ithenticate', 'ithenticate');
 	}
-
+    
 	/**
 	 * @copydoc LazyLoadPlugin::getEnabled()
 	 */
@@ -122,7 +121,59 @@ class PlagiarismPlugin extends GenericPlugin {
 
 		return false;
 	}
+
+	function getActions($request, $verb) {
+		$router = $request->getRouter();
+		import('lib.pkp.classes.linkAction.request.AjaxModal');
+		return array_merge(
+			$this->getEnabled()?array(
+				new LinkAction(
+					'settings',
+					new AjaxModal(
+						$router->url($request, null, null, 'manage', null, array('verb' => 'settings', 'plugin' => $this->getName(), 'category' => 'generic')),
+						$this->getDisplayName()
+					),
+					__('manager.plugins.settings'),
+					null
+				),
+			):array(),
+			parent::getActions($request, $verb)
+		);
+	}
+	
+	
+	 /**
+	 * @copydoc Plugin::manage()
+	 */
+	function manage($args, $request) {
+		switch ($request->getUserVar('verb')) {
+			case 'settings':
+				$context = $request->getContext();
+
+				AppLocale::requireComponents(LOCALE_COMPONENT_APP_COMMON,  LOCALE_COMPONENT_PKP_MANAGER);
+				$templateMgr = TemplateManager::getManager($request);
+				$templateMgr->register_function('plugin_url', array($this, 'smartyPluginUrl'));
+				$this->import('PlagiarismSettingsForm');
+				$form = new PlagiarismSettingsForm($this, $context->getId());
+
+				if ($request->getUserVar('save')) {
+					$form->readInputData();
+					if ($form->validate()) {
+						$form->execute();
+						return new JSONMessage(true);
+					}
+				} else {
+					$form->initData();
+				}
+				return new JSONMessage(true, $form->fetch($request));
+		}
+		return parent::manage($args,$request);
+	}
+
+	
 }
+
+
 
 /**
  * Low-budget mock class for \bsobbe\ithenticate\Ithenticate -- Replace the
