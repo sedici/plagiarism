@@ -21,7 +21,16 @@ class PlagiarismPlugin extends GenericPlugin {
 		$this->addLocaleData();
 
 		if ($success && Config::getVar('ithenticate', 'ithenticate') && $this->getEnabled()) {
-			HookRegistry::register('submissionsubmitstep4form::execute', array($this, 'callback'));
+			 HookRegistry::register('submissionsubmitstep4form::execute', array($this, 'callback'));
+
+			 //Hook para agregar ithenticate al agregar un envío
+             //HookRegistry::register('Submission::add', array($this,'initIthenticate'));
+		
+			 //Add the template to the article's detail page.
+             //HookRegistry::register('TemplateManager::display', array($this, 'addIthenticateButton'));
+
+             //Called when a Submission updates its status property.			  
+             //HookRegistry::register('Submission::updateStatus', array($this,'checkIthenticate'));
 		}
 		return $success;
 	}
@@ -67,12 +76,12 @@ class PlagiarismPlugin extends GenericPlugin {
 		$submission = $submissionDao->getById($request->getUserVar('submissionId'));
 		$publication = $submission->getCurrentPublication();
 
-		require_once(dirname(__FILE__) . '/vendor/autoload.php');
-
-		$ithenticate = new \bsobbe\ithenticate\Ithenticate(
-			Config::getVar('ithenticate', 'username'),
-			Config::getVar('ithenticate', 'password')
-		);
+		//require_once(dirname(__FILE__) . '/vendor/autoload.php');
+        $ithenticate = new TestIthenticate('Pablo','Clave');
+		//$ithenticate = new \bsobbe\ithenticate\Ithenticate(
+		//	Config::getVar('ithenticate', 'username'),
+		//	Config::getVar('ithenticate', 'password')
+		//);
 
 		// Make sure there's a group list for this context, creating if necessary.
 		$groupList = $ithenticate->fetchGroupList();
@@ -85,7 +94,6 @@ class PlagiarismPlugin extends GenericPlugin {
 				return false;
 			}
 		}
-
 		// Create a folder for this submission.
 		if (!($folderId = $ithenticate->createFolder(
 			'Submission_' . $submission->getId(),
@@ -97,11 +105,9 @@ class PlagiarismPlugin extends GenericPlugin {
 			error_log('Could not create folder for submission ID ' . $submission->getId() . ' on iThenticate.');
 			return false;
 		}
-
 		$submissionFiles = Services::get('submissionFile')->getMany([
 			'submissionIds' => [$submission->getId()],
 		]);
-
 		$authors = $publication->getData('authors');
 		$author = array_shift($authors);
 		foreach ($submissionFiles as $submissionFile) {
@@ -158,6 +164,19 @@ class PlagiarismPlugin extends GenericPlugin {
 
 				if ($request->getUserVar('save')) {
 					$form->readInputData();
+
+					// Esta linea tiene que ser remplazada por alguna forma de recuperar el valor de el campo stage
+					/*switch ($stage){}
+                         case 'submission':
+							Agregar hook en esta etapa
+						 case 'review':
+							Agregar hook en esta etapa
+						 case 'copyediting':
+							Agregar hook en esta etapa
+						 case 'production':
+							Agregar hook en esta etapa
+					*/
+
 					if ($form->validate()) {
 						$form->execute();
 						return new JSONMessage(true);
@@ -170,7 +189,49 @@ class PlagiarismPlugin extends GenericPlugin {
 		return parent::manage($args,$request);
 	}
 
-	
+	public function initIthenticate($hookName, $args){
+		//Inits the value ithenticateSent to false on the Submission
+		$submissionFile = Services::get('submissionFile');
+		$submissionFile->setData('ithenticateSent', 'false');
+	}
+
+     public function checkIthenticate($hookName, $args){
+	 	 //Como recuperar la data del objeto Submission que indica si se envio o no el articulo a control de plagio
+		 $sentValue = $submission->getData('ithenticateSent');
+		 if($sentValue = false){
+            $templateMgr = TemplateManager::getManager($request);
+            $templateMgr->display($this->getTemplateResource('workflow/workflow.tpl'));
+
+		 }
+	 }
+
+	 function addIthenticateButton($hookName, $params) {
+		// Get the publication statement for this journal or press
+		$context = Application::get()->getRequest()->getContext();
+		$contextId = $context ? $context->getId() : CONTEXT_SITE;
+		$publicationStatement = $this->getSetting($contextId, 'plagiarismAutomaticEnabled');
+
+		// If the journal or press does not have a publication statement,
+		// check if there is one saved for the site.
+		if (!$publicationStatement && $contextId !== CONTEXT_SITE) {
+			$publicationStatement = $this->getSetting(CONTEXT_SITE, 'plagiarismAutomaticEnabled');
+		}
+
+		// Do not modify the output if there is no publication statement
+		if ($plagiarismAutomaticEnabled) {
+			return false;
+		}
+        
+		$templateMgr = TemplateManager::getManager($request);
+		$templateMgr->display($this->getTemplateResource('workflow/workflow.tpl'));
+		// Add the publication statement to the output
+		$output =& $params[2];
+		$output .= '<p class="publication-statement">' . PKPString::stripUnsafeHtml("HOLAAAAAAAAAAA") . '</p>';
+
+		return false;
+	}
+
+
 }
 
 
